@@ -4,19 +4,40 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.tomcat.util.json.JSONParser;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.client.Cancellable;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.mapper.ObjectMapper;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.ScoreSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,31 +51,33 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class BuzzProjectApplication {
-	static URL url = null;
+	private static URL url = null;
+	private static RestHighLevelClient client;
+	private static RestClient lowClient;
+	private static RestHighLevelClient esClient = new RestHighLevelClient(RestClient.builder(new HttpHost("127.0.0.1", 9200, "http")));
 	
 	public static void main(String[] args) {
 		SpringApplication.run(BuzzProjectApplication.class, args);
 		try {
-			JSONArray db = readJsonFromUrl("https://gist.githubusercontent.com/fabiosl/bfef293c110d3513b334f4134bff8ca2/raw/cb1ff2de0899f1c9a6c11c006ba24ff56e9f0571/dataset.json");
+			//JSONArray db = readJsonFromUrl("https://gist.githubusercontent.com/fabiosl/bfef293c110d3513b334f4134bff8ca2/raw/cb1ff2de0899f1c9a6c11c006ba24ff56e9f0571/dataset.json");
 			//loadDatabase(db);
-			launchElasticSearch(db);
+			//initElasticSearch();
+			//createIndex();
+			//getDatabase(db);
+			getAllElements();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private static void launchElasticSearch(JSONArray db) {
-		try {
-			final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-			credentialsProvider.setCredentials(AuthScope.ANY,new UsernamePasswordCredentials("user", "password"));
-		    RestHighLevelClient client = new RestHighLevelClient(
-		            RestClient.builder(
-		               new HttpHost("localhost", 9200))
-		                 .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
-		    String indexName="buzz-database";
+	private static void createIndex() {
+	    String indexName="buzz-database";
+	    try {
 	        Response response = client.getLowLevelClient().performRequest(new Request("HEAD", "/" + indexName));
 	        int statusCode = response.getStatusLine().getStatusCode();
 	        if (statusCode == 404) {
@@ -64,11 +87,56 @@ public class BuzzProjectApplication {
 	        } else {
 	            System.out.println("Index exists");
 	        }
-	        
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+	}
+
+	private static void getAllElements() {
+		Request request = new Request("GET","buzz-database/_search/");
+		request.setJsonEntity("{\"query\": { \"match_all\": {} }}");
+		RestClient restClient = RestClient.builder(
+			    new HttpHost("localhost", 9200, "http")).build();
+		try {
+			Response response = restClient.performRequest(request);
+			
+			SearchRequest searchRequest = new SearchRequest("buzz-database");
+			SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+			sourceBuilder.timeout(new TimeValue(600, TimeUnit.SECONDS)); // Request timeout
+			sourceBuilder.from(0);
+			sourceBuilder.sort(new ScoreSortBuilder().order(SortOrder.DESC)); //Result set ordering
+			searchRequest.source(sourceBuilder);
+			final SearchResponse searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
+			//SearchHits hits = searchResponse.getHits();
+			SearchHit[] searchHits = searchResponse.getHits().getHits();
+			for (SearchHit searchHit : searchHits) {
+			      String hitJson = searchHit.getSourceAsString();
+			      System.out.println(hitJson);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
+		
+	}
+
+	public static void initElasticSearch() {
+		final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(AuthScope.ANY,new UsernamePasswordCredentials("user", "password"));
+	    client = new RestHighLevelClient(
+	            RestClient.builder(
+	               new HttpHost("localhost", 9200))
+	                 .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
+	}
+
+	public static void getDatabase(JSONArray db) {
+		try {
+	     
 	        BulkRequest request = new BulkRequest();
 	        
 	        for (int i = 0; i < db.length(); i++) {
-	        	request.add(new IndexRequest(indexName).source(db.getJSONObject(i), XContentType.JSON));
+	        	request.add(new IndexRequest("buzz-database").source(db.getJSONObject(i), XContentType.JSON));
 	        	BulkResponse bulkresp = client.bulk(request, RequestOptions.DEFAULT);
 	        	if (bulkresp.hasFailures()) {
 		            for (BulkItemResponse bulkItemResponse : bulkresp) {
@@ -110,12 +178,6 @@ public class BuzzProjectApplication {
 	    } finally {
 	      is.close();
 	    }
-	}
-	
-	public static void loadDatabase(JSONObject json) {
-		IndexRequest request = new IndexRequest("posts");
-		request.id("1"); 
-		request.source(json, XContentType.JSON);
 	}
 
 }
