@@ -29,6 +29,9 @@ import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.mapper.ObjectMapper;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
@@ -68,13 +71,39 @@ public class BuzzProjectApplication {
 			//initElasticSearch();
 			//createIndex();
 			//getDatabase(db);
-			getAllElements();
-			
+			//getAllElements();
+			getBy();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
+	private static void getBy() {
+		try {
+			SearchRequest searchRequest = new SearchRequest("buzz-database");
+			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+			MatchQueryBuilder queryBuilder = new MatchQueryBuilder("origin", "twitter");
+			MatchQueryBuilder secondQueryBuilder = new MatchQueryBuilder("author.screenname", "meek_amm");
+			BoolQueryBuilder query = QueryBuilders.boolQuery()
+					   .filter(queryBuilder)
+					   .filter(secondQueryBuilder);
+			searchSourceBuilder.query(query);
+			searchRequest.source(searchSourceBuilder);
+			
+			SearchResponse searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
+			//SearchHits hits = searchResponse.getHits();
+			SearchHit[] searchHits = searchResponse.getHits().getHits();
+			System.out.println(searchHits.length);
+			for (SearchHit searchHit : searchHits) {
+			      String hitJson = searchHit.getSourceAsString();
+			      System.out.println(hitJson);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	private static void createIndex() {
 	    String indexName="buzz-database";
 	    try {
