@@ -97,6 +97,8 @@ public class BuzzProjectApplication {
 			for (SearchHit searchHit : searchHits) {
 			      String hitJson = searchHit.getSourceAsString();
 			      System.out.println(hitJson);
+			      JSONObject jsonObj = new JSONObject(hitJson);
+			      System.out.println(jsonObj.getString("content"));
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
