@@ -1,5 +1,6 @@
 package com.buzzmonitor.demo.controllers;
 
+import java.io.IOException;
 import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +40,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/interactions")
 public class InteractionController {
 	private static RestHighLevelClient esClient = new RestHighLevelClient(RestClient.builder(new HttpHost("127.0.0.1", 9200, "http")));
+	private MatchQueryBuilder queryBuilder = null;
+	private MatchQueryBuilder secondQueryBuilder = null;
+	private SearchHit[] searchHits = null;
+	private Map<String, String> idsAndContents = null;
+	private String json = "";
+	private SearchResponse searchResponse = null;
 	
 	@GetMapping(produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> getAll() {
@@ -154,64 +161,154 @@ public class InteractionController {
 	@GetMapping(value="/{socialmedia}/{name}/replies", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> getRepliesByName(@PathVariable("socialmedia") String socialMedia, 
 												@PathVariable("name") String name) {
-		MatchQueryBuilder queryBuilder = null;
-		MatchQueryBuilder secondQueryBuilder = null;
-		SearchHit[] searchHits = null;
-		Map<String, String> idsAndContents = new HashMap<String, String> ();
-		Map<String, ArrayList<String>> replies = new HashMap<String, ArrayList<String>> ();
-		String json = "";
+		if(socialMedia.equals("twitter")) {
+			return getTwitterResponse(name);
+		}
+		else if(socialMedia.equals("instagram")){
+			return getInstaResponse(name);
+		}
+		else { 
+			throw new ElementNotFound(); 
+		}
+		
+	}
+
+	private ResponseEntity<String> getInstaResponse(String login) {
+		idsAndContents = new HashMap<String, String>();
+		SearchRequest searchRequest = new SearchRequest("buzz-database");
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		queryBuilder = new MatchQueryBuilder("origin", "instagram");
+		secondQueryBuilder = new MatchQueryBuilder("author.login", login);
+		MatchQueryBuilder thirdQueryBuilder = new MatchQueryBuilder("type", "image");
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery()
+				   .filter(queryBuilder)
+				   .filter(secondQueryBuilder)
+				   .filter(thirdQueryBuilder);
+		searchSourceBuilder.query(query);
+		searchRequest.source(searchSourceBuilder);
 		
 		try {
-			SearchRequest searchRequest = new SearchRequest("buzz-database");
-			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-			queryBuilder = new MatchQueryBuilder("origin", socialMedia);
-			if(socialMedia.equals("twitter")) {
-				secondQueryBuilder = new MatchQueryBuilder("author.screenname", name);
+			searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		searchHits = searchResponse.getHits().getHits();
+		checkHist(searchHits);
+		for (SearchHit searchHit : searchHits) {
+		      String hitJson = searchHit.getSourceAsString();
+		      JSONObject jsonObj = null;
+			try {
+				jsonObj = new JSONObject(hitJson);
+		    	idsAndContents.put(jsonObj.getString("link"), jsonObj.getString("content"));
+			} catch (JSONException e) {
+				e.printStackTrace();
 			}
-			else { 
-				secondQueryBuilder = new MatchQueryBuilder("author.login", name);
-			}
-			
-			BoolQueryBuilder query = QueryBuilders.boolQuery()
+		      
+		}
+		
+		for(String post : idsAndContents.keySet()) {
+			queryBuilder = new MatchQueryBuilder("link", post);
+			secondQueryBuilder = new MatchQueryBuilder("type", "comment");
+			searchSourceBuilder.query(queryBuilder);
+			query = QueryBuilders.boolQuery()
 					   .filter(queryBuilder)
 					   .filter(secondQueryBuilder);
 			searchSourceBuilder.query(query);
 			searchRequest.source(searchSourceBuilder);
-			
-			SearchResponse searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
-			searchHits = searchResponse.getHits().getHits();
-			
-			for (SearchHit searchHit : searchHits) {
-			      String hitJson = searchHit.getSourceAsString();
-			      JSONObject jsonObj = new JSONObject(hitJson);
-			      idsAndContents.put(jsonObj.getString("post_id"), jsonObj.getString("content"));
-			}
-			
-			for(String key : idsAndContents.keySet()) {
-				queryBuilder = new MatchQueryBuilder("in_reply_to", key);
-				searchSourceBuilder.query(queryBuilder);
-				searchRequest.source(searchSourceBuilder);
+			try {
 				searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
-				searchHits = searchResponse.getHits().getHits();
-				json = "{\"post_id\": \"" + key + "\", \"content\":\"" + idsAndContents.get(key) + "\", \"replies\": [\"";
-				for (SearchHit searchHit : searchHits) {
-					String hitJson = searchHit.getSourceAsString();
-				      JSONObject jsonObj = new JSONObject(hitJson);
-				      json += jsonObj.getString("content") + "\",\"";
-				}
-				json = json.substring(0, json.length() - 1) + "]}";
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			
-			
-		} catch (Exception e) {
+			searchHits = searchResponse.getHits().getHits();
+			checkHist(searchHits);
+			json = "{\"link\": \"" + post + "\", \"content\":\"" + idsAndContents.get(post) + "\", \"comments\": [\"";
+			for (SearchHit searchHit : searchHits) {
+				String hitJson = searchHit.getSourceAsString();
+			      JSONObject jsonObj = null;
+				try {
+					jsonObj = new JSONObject(hitJson);
+					json += jsonObj.getString("content") + "\",\"";
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+			json = json.substring(0, json.length() - 2) + "]}";
+		}
+		return new ResponseEntity<String>(json, HttpStatus.OK);
+
+	}
+
+	private ResponseEntity<String> getTwitterResponse(String name) {
+		SearchRequest searchRequest = new SearchRequest("buzz-database");
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		idsAndContents = new HashMap<String, String>();
+		queryBuilder = new MatchQueryBuilder("origin", "twitter");
+		secondQueryBuilder = new MatchQueryBuilder("author.screenname", name);
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery()
+				   .filter(queryBuilder)
+				   .filter(secondQueryBuilder);
+		searchSourceBuilder.query(query);
+		searchRequest.source(searchSourceBuilder);
+
+		try {
+			searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		searchHits = searchResponse.getHits().getHits();
+		checkHist(searchHits);
 		
-		if(json != "") { 
-			return new ResponseEntity<String>(json, HttpStatus.OK);
+		for (SearchHit searchHit : searchHits) {
+		      String hitJson = searchHit.getSourceAsString();
+		      JSONObject jsonObj = null;
+			try {
+				jsonObj = new JSONObject(hitJson);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		      try {
+				idsAndContents.put(jsonObj.getString("post_id"), jsonObj.getString("content"));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
 		}
 		
-		else { 
+		for(String key : idsAndContents.keySet()) {
+			queryBuilder = new MatchQueryBuilder("in_reply_to", key);
+			searchSourceBuilder.query(queryBuilder);
+			searchRequest.source(searchSourceBuilder);
+			try {
+				searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			searchHits = searchResponse.getHits().getHits();
+			checkHist(searchHits);
+			json = "{\"post_id\": \"" + key + "\", \"content\":\"" + idsAndContents.get(key) + "\", \"replies\": [\"";
+			for (SearchHit searchHit : searchHits) {
+				String hitJson = searchHit.getSourceAsString();
+			      JSONObject jsonObj = null;
+				try {
+					jsonObj = new JSONObject(hitJson);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			      try {
+					json += jsonObj.getString("content") + "\",\"";
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+			json = json.substring(0, json.length() - 1) + "]}";
+		}
+		return new ResponseEntity<String>(json, HttpStatus.OK);
+	}
+	
+	public void checkHist(SearchHit[] hits) {
+		if (hits.length == 0) {
 			throw new ElementNotFound(); 
 		}
 	}
