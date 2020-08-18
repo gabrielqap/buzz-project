@@ -93,12 +93,12 @@ public class BuzzProjectApplication {
 			SearchResponse searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
 			//SearchHits hits = searchResponse.getHits();
 			SearchHit[] searchHits = searchResponse.getHits().getHits();
-			System.out.println(searchHits.length);
+			// System.out.println(searchHits.length);
 			for (SearchHit searchHit : searchHits) {
 			      String hitJson = searchHit.getSourceAsString();
-			      System.out.println(hitJson);
+		//	      // System.out.println(hitJson);
 			      JSONObject jsonObj = new JSONObject(hitJson);
-			      System.out.println(jsonObj.getString("content"));
+		//	      // System.out.println(jsonObj.getString("content"));
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -114,9 +114,9 @@ public class BuzzProjectApplication {
 	        if (statusCode == 404) {
 	            CreateIndexRequest cireq = new CreateIndexRequest(indexName);
 	            CreateIndexResponse ciresp = client.indices().create(cireq, RequestOptions.DEFAULT);
-	            System.out.println("Created index");
+	            // System.out.println("Created index");
 	        } else {
-	            System.out.println("Index exists");
+	            // System.out.println("Index exists");
 	        }
 	    } catch (Exception e) {
 	    	e.printStackTrace();
@@ -142,7 +142,7 @@ public class BuzzProjectApplication {
 			SearchHit[] searchHits = searchResponse.getHits().getHits();
 			for (SearchHit searchHit : searchHits) {
 			      String hitJson = searchHit.getSourceAsString();
-			      System.out.println(hitJson);
+			      // System.out.println(hitJson);
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -173,12 +173,12 @@ public class BuzzProjectApplication {
 		            for (BulkItemResponse bulkItemResponse : bulkresp) {
 		                if (bulkItemResponse.isFailed()) {
 		                    BulkItemResponse.Failure failure = bulkItemResponse.getFailure();
-		                    System.out.println("Error " + failure.toString());
+		                    // System.out.println("Error " + failure.toString());
 		                }
 		            }
 		        }
 		        else {
-		        	System.out.println("Uploaded!");
+		        	// System.out.println("Uploaded!");
 		        }
 	        	request=new BulkRequest();
 	        }
