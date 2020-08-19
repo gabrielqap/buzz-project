@@ -33,6 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -305,6 +306,27 @@ public class InteractionController {
 			json = json.substring(0, json.length() - 1) + "]}";
 		}
 		return new ResponseEntity<String>(json, HttpStatus.OK);
+	}
+	
+	@GetMapping(value="/{id}", produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> getById(@PathVariable("id") String id){
+		SearchRequest searchRequest = new SearchRequest("buzz-database");
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		queryBuilder = new MatchQueryBuilder("_id", id);
+		BoolQueryBuilder query = QueryBuilders.boolQuery()
+				   .filter(queryBuilder);
+		searchSourceBuilder.query(query);
+		searchRequest.source(searchSourceBuilder);
+
+		try {
+			searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		searchHits = searchResponse.getHits().getHits();
+		checkHist(searchHits);
+		String hitJson = searchHits[0].getSourceAsString();
+		return new ResponseEntity<String>(hitJson, HttpStatus.OK);
 	}
 	
 	public void checkHist(SearchHit[] hits) {
