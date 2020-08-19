@@ -16,6 +16,8 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
@@ -39,6 +41,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -346,6 +349,50 @@ public class InteractionController {
 		ReplicationResponse.ShardInfo shardInfo = response.getShardInfo();
 		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
 			return new ResponseEntity<String>("Deleted!", HttpStatus.OK);
+		}
+		else {
+			throw new ElementNotFound();
+		}
+	}
+	
+	@PutMapping(value="/{id}",  
+		    consumes={MediaType.APPLICATION_JSON_VALUE}, 
+		    produces = {MediaType.APPLICATION_JSON_VALUE})
+	public ResponseEntity<String> putById(@PathVariable("id") String id, @RequestBody String requestBody){
+		JSONObject reqBody = null;
+		HashMap<String, String> requestJson = new HashMap<String, String>();
+		try {
+			reqBody = new JSONObject(requestBody);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Iterator keysToCopyIterator = reqBody.keys();
+		while(keysToCopyIterator.hasNext()) {
+		    String key = (String) keysToCopyIterator.next();
+		    try {
+				requestJson.put(key, reqBody.getString(key));
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		Map<String, Object> jsonMap = new HashMap<>();
+		for(String key : requestJson.keySet()) {
+			jsonMap.put(key, requestJson.get(key));
+		}
+		UpdateRequest request = new UpdateRequest("buzz-database", id)
+		        .doc(jsonMap);
+		UpdateResponse response = null;
+		try {
+			response = esClient.update(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		ReplicationResponse.ShardInfo shardInfo = response.getShardInfo();
+		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
+			return new ResponseEntity<String>("Updated!", HttpStatus.OK);
 		}
 		else {
 			throw new ElementNotFound();
