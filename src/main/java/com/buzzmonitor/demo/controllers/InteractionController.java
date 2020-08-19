@@ -11,8 +11,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.ResourceNotFoundException;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
@@ -23,6 +27,7 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -40,6 +45,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -398,6 +404,33 @@ public class InteractionController {
 			throw new ElementNotFound();
 		}
 	}
+	
+	@PostMapping(consumes={MediaType.APPLICATION_JSON_VALUE})
+	public ResponseEntity<String> Post(@RequestBody String requestBody){
+		JSONObject reqBody = null;
+		try {
+			reqBody = new JSONObject(requestBody);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		BulkRequest request = new BulkRequest();
+		System.out.println(reqBody.toString());
+		request.add(new IndexRequest("buzz-database").source(requestBody, XContentType.JSON));
+		BulkResponse bulkResp = null;
+    	try {
+			bulkResp = esClient.bulk(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	if (bulkResp.hasFailures()) {
+			throw new ElementError();
+		}
+		else {
+			return new ResponseEntity<String>("Created!", HttpStatus.CREATED);
+		}
+	}
+	
 	
 	public void checkHist(SearchHit[] hits) {
 		if (hits.length == 0) {
