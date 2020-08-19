@@ -11,8 +11,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.ResourceNotFoundException;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
@@ -22,6 +25,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.ScoreSortBuilder;
@@ -31,6 +35,7 @@ import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -327,6 +332,24 @@ public class InteractionController {
 		checkHist(searchHits);
 		String hitJson = searchHits[0].getSourceAsString();
 		return new ResponseEntity<String>(hitJson, HttpStatus.OK);
+	}
+	
+	@DeleteMapping(value="/{id}")
+	public ResponseEntity<String> deleteById(@PathVariable("id") String id){
+		DeleteRequest request = new DeleteRequest("buzz-database", id);
+		DeleteResponse response = null;
+		try {
+			response = esClient.delete(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		ReplicationResponse.ShardInfo shardInfo = response.getShardInfo();
+		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
+			return new ResponseEntity<String>("Deleted!", HttpStatus.OK);
+		}
+		else {
+			throw new ElementNotFound();
+		}
 	}
 	
 	public void checkHist(SearchHit[] hits) {
