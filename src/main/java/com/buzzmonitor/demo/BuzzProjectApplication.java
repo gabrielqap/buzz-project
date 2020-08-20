@@ -66,11 +66,10 @@ public class BuzzProjectApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BuzzProjectApplication.class, args);
 		try {
-			//JSONArray db = readJsonFromUrl("https://gist.githubusercontent.com/fabiosl/bfef293c110d3513b334f4134bff8ca2/raw/cb1ff2de0899f1c9a6c11c006ba24ff56e9f0571/dataset.json");
-			//loadDatabase(db);
-			//initElasticSearch();
-			//createIndex();
-			//insertDatabase(db);
+			JSONArray db = readJsonFromUrl("https://raw.githubusercontent.com/gabrielqap/buzz-project/master/buzz-project.json");
+			initElasticSearch();
+			createIndex();
+			insertDatabase(db);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
