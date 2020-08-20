@@ -8,9 +8,9 @@
           "collected_from" : "WALL",
           "archived" : false,
           "author" : {
-            "name" : """amira 🌻""",
-            "name_searchable" : """amira 🌻""",
-            "description" : """@lander5d❣️class of ‘19 🎓🧡 THHHH""",
+            "name" : "amira 🌻",
+            "name_searchable" : "amira 🌻",
+            "description" : "@lander5d❣️class of ‘19 🎓🧡 THHHH",
             "bios" : [
               "thhhh",
               "class"
@@ -59,9 +59,9 @@
           "collected_from" : "WALL",
           "archived" : false,
           "author" : {
-            "name" : """amira 🌻""",
-            "name_searchable" : """amira 🌻""",
-            "description" : """@lander5d❣️class of ‘19 🎓🧡 THHHH""",
+            "name" : "amira 🌻",
+            "name_searchable" : "amira 🌻",
+            "description" : "@lander5d❣️class of ‘19 🎓🧡 THHHH",
             "bios" : [
               "thhhh",
               "class"
@@ -103,7 +103,7 @@
 {
           "interaction_type" : "monitoring_brands",
           "post_id" : "17967790768126316",
-          "content" : """#tbt 💛 Capadócia
+          "content" : "#tbt 💛 Capadócia
 .
 Pra quem não viu, a Capadócia não é só voo de balão.
 .
@@ -116,7 +116,7 @@ E termina com esse visual aí da foto!
 Gostou?!
 .
 .
-#turquia #goreme #travelling #brasileirospelomundo #travelaround #tbt #instatravel #thanks #mochileiros #turkey🇹🇷 #capadocia #kapadokya #ballons #quadriciculo #adventuretime""",
+#turquia #goreme #travelling #brasileirospelomundo #travelaround #tbt #instatravel #thanks #mochileiros #turkey🇹🇷 #capadocia #kapadokya #ballons #quadriciculo #adventuretime",
           "sentiment" : "POSITIVE",
           "service" : "instagram",
           "likes" : 112,
@@ -125,8 +125,8 @@ Gostou?!
             "login" : "99destinos",
             "name" : "Um casal, 99 Destinos, vem!",
             "name_searchable" : "Um casal, 99 Destinos, vem!",
-            "description" : """Um ano de volta ao mundo, vem com a gente! Aimée e Fábio ✈️ 🌍 
-👇Acompanhe tudo no nosso Blog👇""",
+            "description" : "Um ano de volta ao mundo, vem com a gente! Aimée e Fábio ✈️ 🌍 
+👇Acompanhe tudo no nosso Blog👇",
             "bios" : [
               "acompanhe",
               "mundo",
@@ -289,8 +289,8 @@ Gostou?!
             "login" : "99destinos",
             "name" : "Um casal, 99 Destinos, vem!",
             "name_searchable" : "Um casal, 99 Destinos, vem!",
-            "description" : """Um ano de volta ao mundo, vem com a gente! Aimée e Fábio ✈️ 🌍 
-👇Acompanhe tudo no nosso Blog👇""",
+            "description" : "Um ano de volta ao mundo, vem com a gente! Aimée e Fábio ✈️ 🌍 
+👇Acompanhe tudo no nosso Blog👇",
             "bios" : [
               "acompanhe",
               "mundo",
@@ -339,9 +339,9 @@ Gostou?!
           "collected_from" : "WALL",
           "archived" : false,
           "author" : {
-            "name" : """amira 🌻""",
-            "name_searchable" : """amira 🌻""",
-            "description" : """@lander5d❣️class of ‘19 🎓🧡 THHHH""",
+            "name" : "amira 🌻",
+            "name_searchable" : "amira 🌻",
+            "description" : "@lander5d❣️class of ‘19 🎓🧡 THHHH",
             "bios" : [
               "thhhh",
               "class"
@@ -407,14 +407,14 @@ Gostou?!
               "thhhh",
               "class"
             ],
-            "description" : """@lander5d❣️class of ‘19 🎓🧡 THHHH""",
+            "description" : "@lander5d❣️class of ‘19 🎓🧡 THHHH",
             "created_at" : "2012-06-23 19:50:07",
-            "name_searchable" : """amira 🌻""",
+            "name_searchable" : "amira 🌻",
             "profile_image_url" : "http://pbs.twimg.com/profile_images/1011741479616827392/OU_Su508_normal.jpg",
             "tweets" : 60860,
             "friends" : 9066,
             "followers" : 14327,
-            "name" : """amira 🌻""",
+            "name" : "amira 🌻",
             "location" : "new york",
             "screenname" : "meek_amm",
             "updated" : true
@@ -461,10 +461,10 @@ Gostou?!
               "york",
               "long"
             ],
-            "name" : """Anthony 🚢⚓️""",
-            "description" : """so sad so sexy 🇵🇷 (23) Long Island, New York""",
+            "name" : "Anthony 🚢⚓️",
+            "description" : "so sad so sexy 🇵🇷 (23) Long Island, New York",
             "created_at" : "2011-06-28 19:48:51",
-            "name_searchable" : """Anthony 🚢⚓️""",
+            "name_searchable" : "Anthony 🚢⚓️",
             "profile_image_url" : "http://pbs.twimg.com/profile_images/1014558166921641987/eKSrwZ3w_normal.jpg",
             "screenname" : "Cruiseship13",
             "tweets" : 40957,
