@@ -1,7 +1,5 @@
 package com.buzzmonitor.demo.models;
 
-import com.buzzmonitor.demo.models.Author;
-
 public class Interaction {
 	private String interactionType;
 	private String postId;
@@ -9,7 +7,6 @@ public class Interaction {
 	private String service;
 	private String application;
 	private String origin;
-	private Author author;
 	private boolean archived;
 	private int count;
 	private int engagement;
@@ -62,14 +59,6 @@ public class Interaction {
 
 	public String getOrigin() {
 		return origin;
-	}
-
-	public Author getAuthor() {
-		return author;
-	}
-
-	public void setAuthor(Author author) {
-		this.author = author;
 	}
 
 	public boolean isArchived() {

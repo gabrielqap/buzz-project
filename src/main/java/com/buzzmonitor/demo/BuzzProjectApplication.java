@@ -70,42 +70,12 @@ public class BuzzProjectApplication {
 			//loadDatabase(db);
 			//initElasticSearch();
 			//createIndex();
-			//getDatabase(db);
-			//getAllElements();
-			getBy();
+			//insertDatabase(db);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private static void getBy() {
-		try {
-			SearchRequest searchRequest = new SearchRequest("buzz-database");
-			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-			MatchQueryBuilder queryBuilder = new MatchQueryBuilder("origin", "twitter");
-			MatchQueryBuilder secondQueryBuilder = new MatchQueryBuilder("author.screenname", "meek_amm");
-			BoolQueryBuilder query = QueryBuilders.boolQuery()
-					   .filter(queryBuilder)
-					   .filter(secondQueryBuilder);
-			searchSourceBuilder.query(query);
-			searchRequest.source(searchSourceBuilder);
-			
-			SearchResponse searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
-			//SearchHits hits = searchResponse.getHits();
-			SearchHit[] searchHits = searchResponse.getHits().getHits();
-			// System.out.println(searchHits.length);
-			for (SearchHit searchHit : searchHits) {
-			      String hitJson = searchHit.getSourceAsString();
-		//	      // System.out.println(hitJson);
-			      JSONObject jsonObj = new JSONObject(hitJson);
-		//	      // System.out.println(jsonObj.getString("content"));
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 	private static void createIndex() {
 	    String indexName="buzz-database";
 	    try {
@@ -114,43 +84,15 @@ public class BuzzProjectApplication {
 	        if (statusCode == 404) {
 	            CreateIndexRequest cireq = new CreateIndexRequest(indexName);
 	            CreateIndexResponse ciresp = client.indices().create(cireq, RequestOptions.DEFAULT);
-	            // System.out.println("Created index");
+	            System.out.println("Created index");
 	        } else {
-	            // System.out.println("Index exists");
+	            System.out.println("Index exists");
 	        }
 	    } catch (Exception e) {
 	    	e.printStackTrace();
 	    }
 	}
 
-	private static void getAllElements() {
-		Request request = new Request("GET","buzz-database/_search/");
-		request.setJsonEntity("{\"query\": { \"match_all\": {} }}");
-		RestClient restClient = RestClient.builder(
-			    new HttpHost("localhost", 9200, "http")).build();
-		try {
-			Response response = restClient.performRequest(request);
-			
-			SearchRequest searchRequest = new SearchRequest("buzz-database");
-			SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-			sourceBuilder.timeout(new TimeValue(600, TimeUnit.SECONDS)); // Request timeout
-			sourceBuilder.from(0);
-			sourceBuilder.sort(new ScoreSortBuilder().order(SortOrder.DESC)); //Result set ordering
-			searchRequest.source(sourceBuilder);
-			final SearchResponse searchResponse = esClient.search(searchRequest, RequestOptions.DEFAULT);
-			//SearchHits hits = searchResponse.getHits();
-			SearchHit[] searchHits = searchResponse.getHits().getHits();
-			for (SearchHit searchHit : searchHits) {
-			      String hitJson = searchHit.getSourceAsString();
-			      // System.out.println(hitJson);
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	
-		
-	}
 
 	public static void initElasticSearch() {
 		final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -161,24 +103,24 @@ public class BuzzProjectApplication {
 	                 .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
 	}
 
-	public static void getDatabase(JSONArray db) {
+	public static void insertDatabase(JSONArray db) {
 		try {
 	     
 	        BulkRequest request = new BulkRequest();
 	        
 	        for (int i = 0; i < db.length(); i++) {
-	        	request.add(new IndexRequest("buzz-database").source(db.getJSONObject(i), XContentType.JSON));
+	        	request.add(new IndexRequest("buzz-database").source(db.getJSONObject(i).toString(), XContentType.JSON));
 	        	BulkResponse bulkresp = client.bulk(request, RequestOptions.DEFAULT);
 	        	if (bulkresp.hasFailures()) {
 		            for (BulkItemResponse bulkItemResponse : bulkresp) {
 		                if (bulkItemResponse.isFailed()) {
 		                    BulkItemResponse.Failure failure = bulkItemResponse.getFailure();
-		                    // System.out.println("Error " + failure.toString());
+		                    System.out.println("Error " + failure.toString());
 		                }
 		            }
 		        }
 		        else {
-		        	// System.out.println("Uploaded!");
+		        	 System.out.println("Uploaded!");
 		        }
 	        	request=new BulkRequest();
 	        }
