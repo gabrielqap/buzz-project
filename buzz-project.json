@@ -1,4 +1,6 @@
 {
+  "data": [
+	{
           "interaction_type" : "monitoring_brands",
           "post_id" : "1049282814565396856",
           "content" : "teste content",
@@ -483,4 +485,7 @@ Gostou?!
           "elasticsearch_routing" : "100000724400369_peppa",
           "user" : null,
           "collected_from" : "WALL"
-        },
+      }
+	]
+}
+    
